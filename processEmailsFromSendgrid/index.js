@@ -40,30 +40,36 @@ const getBody = (content, headers) => new Promise((resolve, reject) => {
   parser.end();
 });
 
-
+/**
+ * Handler being called
+ */
 exports.handler = (event, context, callback) => {
 
-  // Get POST requests received via SendGrid
-  let SUBJECT = event['subject'];
+    var contentType = event.headers['Content-Type'] || event.headers['content-type'];
 
-    var params = {
-      TableName: 'pogi_remail',
-      Item: AWS.DynamoDB.Converter.marshall({
-        'email_id' : uuid.v1(),
-        'subject': SUBJECT ? SUBJECT : "No subject",
-        'event': event, //JSON.parse(event.body);
-        'email_timestamp' : "timestamp goes here",
-      })
-    };
+    var bodyData = getBody(cntent, headerz).then(data => {
+        console.log(JSON.encode(data));
+    })
 
-    // Call DynamoDB to add the item to the table
-    dynamodb.putItem(params, function(err, data) {
-      if (err) {
-        console.log("Error", err);
-      } else {
-        console.log("Success", data);
-      }
-    });
+
+    // var params = {
+    //   TableName: 'pogi_remail',
+    //   Item: AWS.DynamoDB.Converter.marshall({
+    //     'email_id' : uuid.v1(),
+    //     'subject': SUBJECT ? SUBJECT : "No subject",
+    //     'event': event, //JSON.parse(event.body);
+    //     'email_timestamp' : "timestamp goes here",
+    //   })
+    // };
+    //
+    // // Call DynamoDB to add the item to the table
+    // dynamodb.putItem(params, function(err, data) {
+    //   if (err) {
+    //     console.log("Error", err);
+    //   } else {
+    //     console.log("Success", data);
+    //   }
+    // });
 
     var response = {
         "statusCode": 200,
