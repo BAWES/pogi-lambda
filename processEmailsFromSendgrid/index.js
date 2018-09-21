@@ -13,10 +13,10 @@ var dynamodb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 var Busboy = require('busboy');
 var YError = require('yerror');
 var getRawBody = require('raw-body');
-const getBody = (content, headers) => new Promise((resolve, reject) => {
+const getBody = (content, contentType) => new Promise((resolve, reject) => {
   const filePromises = [];
   const data = {};
-  const parser = new Busboy({'headers': headers});
+  const parser = new busboy({ headers: { 'content-type': contentType }});
 
 
   parser.on('field', (name, value) => {
@@ -47,29 +47,31 @@ exports.handler = (event, context, callback) => {
 
     var contentType = event.headers['Content-Type'] || event.headers['content-type'];
 
-    var bodyData = getBody(cntent, headerz).then(data => {
-        console.log(JSON.encode(data));
+    var bodyData = getBody(event.body, contentType).then(data => {
+        // console.log();
+        var params = {
+          TableName: 'pogi_remail',
+          Item: AWS.DynamoDB.Converter.marshall({
+            'email_id' : uuid.v1(),
+            'subject': SUBJECT ? SUBJECT : "No subject",
+            'dataReceived': JSON.encode(data),
+            'event': event, //JSON.parse(event.body);
+            'email_timestamp' : "timestamp goes here",
+          })
+        };
+
+        // Call DynamoDB to add the item to the table
+        dynamodb.putItem(params, function(err, data) {
+          if (err) {
+            console.log("Error", err);
+          } else {
+            console.log("Success", data);
+          }
+        });
     })
 
 
-    // var params = {
-    //   TableName: 'pogi_remail',
-    //   Item: AWS.DynamoDB.Converter.marshall({
-    //     'email_id' : uuid.v1(),
-    //     'subject': SUBJECT ? SUBJECT : "No subject",
-    //     'event': event, //JSON.parse(event.body);
-    //     'email_timestamp' : "timestamp goes here",
-    //   })
-    // };
-    //
-    // // Call DynamoDB to add the item to the table
-    // dynamodb.putItem(params, function(err, data) {
-    //   if (err) {
-    //     console.log("Error", err);
-    //   } else {
-    //     console.log("Success", data);
-    //   }
-    // });
+
 
     var response = {
         "statusCode": 200,
